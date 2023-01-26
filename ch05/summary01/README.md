@@ -390,6 +390,8 @@ TF_LITE_MICRO_TESTS_END
 
 test를 로컬에서 실행하기 위해서 몇 가지 작업이 필요하다. 우선 (보통은 OS에 미리 설치되어 있는) Git과 Make가 설치되었는지 확인한다.
 
+> project에서는 여러 C source file들을 compile해서 object 파일을 만들고, 이런 object들을 link해서 실행 파일을 만들어야 한다. Make를 사용하면 빌드 작업을 번거롭지 않게 수행할 수 있다. 
+
 ```bash
 $ git
 
@@ -398,8 +400,11 @@ $ make --version
 
 설치가 제대로 되어 있다면 그 다음은 git을 이용해 tensorflow source code를 설치해야 한다.
 
+> 2021년 6월 tensorflow github에서 TFLM codebase가 따로 분리되었다. 따라서 'git clone https://github.com/tensorflow/tensorflow.git' 명령 대신 다음 명령을 이용해서 설치한다. 
+
 ```bash
-$ git clone https://github.com/tensorflow/tensorflow.git
+# TFLM 팀 제공
+$ git clone https://github.com/tensorflow/tflite-micro.git
 ```
 
 터미널에서 git clone으로 생성된 tensorflow 디렉터리로 이동하면 test를 위한 준비는 마무리된다.
@@ -410,9 +415,11 @@ $ git clone https://github.com/tensorflow/tensorflow.git
 
 Make는 software 빌드 작업을 자동화하는 도구로, 개발자가 정의한 `Makefile`을 바탕으로 code를 빌드하고 실행한다.
 
-> MCU용 TFLite의 `Makefile`은 'micro/tools/make/Makefile'에 정의되어 있다.
+> MCU용 TFLite의 `Makefile`은 'lite/micro/tools/make/Makefile'에 정의되어 있다.
 
-이제 Make를 사용하여 test를 실행한다. 이때 다음 명령은 git clone으로 생성된 tensorflow 디렉터리의 루트에서 실행해야 한다.
+이제 Make를 사용하여 test를 실행한다. 이때 다음 명령은 git clone으로 생성된 tensorflow/의 부모 디렉터리에서 실행해야 한다.
+
+> make -f tensorflow/lite/micro/tools/make/Makefile 까지 입력하고 [TAB] 키를 누르면 빌드 가능한 모든 대상을 자동 완성으로 확인할 수 있다.
 
 ```bash
 $ make -f tensorflow/lite/micro/tools/make/Makefile test_hello_world_test
@@ -432,3 +439,170 @@ $ make -f tensorflow/lite/micro/tools/make/Makefile test_hello_world_test
 
 ---
 
+#### 5.1.11.3 Make 기초
+
+> [Make 기초 사용법](https://www.joinc.co.kr/w/Site/C/Documents/minzkn_make)
+
+Make는 크게 Target, Depend, Command, Macro로 구성된다. 아래는 `Make`의 행동을 기술하는 'Makefile' code의 간단한 예시다.
+
+```
+edit : main.o kbd.o command.o display.o \
+       insert.o search.o files.o utils.o
+        cc -o edit main.o kbd.o command.o display.o \
+                   insert.o search.o files.o utils.o
+
+main.o : main.c defs.h
+        cc -c main.c
+kbd.o : kbd.c defs.h command.h
+        cc -c kbd.c
+```
+
+- cc: cc란 C compiler를 의미하며 여기서는 gcc가 호출될 것이다. -c 옵션을 주면 'source_file.c'를 compile해서 'source_file.o' object file을 만든다.
+
+  > cc는 일반적으로 gcc나 clang을 지칭하는 말이다.
+
+이들은 다음과 같은 구성으로 쓰였다. <U>\<Command\> 바로 앞에 꼭 \<TAB\> 문자가 위치</U>해야 하므로 주의하자.
+
+```
+<Target>: <Depend> >... [[;] <Command>]
+<TAB><Command>
+```
+
+- <Target>: 생성할 Target 파일
+
+- <Depend>: Target을 만들기 위해 필요한 **dependencies**(종속성). 따라서 여러 dependencies가 올 수 있다.
+
+- <Command>: 일반 쉘 명령
+
+이번에는 다른 예시도 살펴보자.
+
+```
+test: test.o 
+        ld -lc -m elf_i386 -dynamic-linker /lib/ld-linux.so.2 -o test /usr/lib/crt1.o /usr/lib/crti.o /usr/lib/crtn.o test.o 
+
+test.o: test.c 
+        cc -O2 -Wall -Werror -fomit-frame-pointer -c -o test.o test.c 
+```
+
+이 경우 터미널에서 'make test'라는 명령만 입력하면 다음과 같이 실행된다.
+
+```bash
+$ make test 
+cc -O2 -Wall -Werror -fomit-frame-pointer -c -o test.o test.c 
+ld -lc -m elf_i386 -dynamic-linker /lib/ld-linux.so.2 -o test /usr/lib/crt1.o /usr/lib/crti.o /usr/lib/crtn.o test.o 
+```
+
+이렇게 빌드가 완성이 된다. 참고로 다시 한번 make test 명령을 입력하면 다음과 같이 동일한 작업은 더 수행하지 않는 것을 확인할 수 있다.
+
+```
+$ make test 
+make: `test'는 이미 갱신되었습니다. 
+```
+
+이를 판단하는 기준은 <Depend>에 해당되는 file의 수정 날짜로, <Target>이 만들어진 뒤 다시 <Depend>가 수정이 된 것이 확인되는 경우 다시 make test를 통한 빌드가 가능하다.
+
+---
+
+#### 5.11.1.4 Make: Macro
+
+하지만 앞선 예제처럼 Makefile을 작성하는 것은 매우 번거로우므로 Make에서는 Macro 기능을 제공한다. 양식은 다음과 같다.
+
+```
+<Macro name> = <Macro code>
+```
+
+앞서 본 예제를 Macro 기능을 이용해서 정리하면 다음과 같이 바뀌게 된다. Macro를 사용하기 위해서는 해당 Macro에 \$()으로 감싸서 작성해야 한다.
+
+```
+CC = cc 
+LD = ld 
+CFLAGS = -O2 -Wall -Werror -fomit-frame-pointer -c 
+LDFLAGS = -lc -m elf_i386 -dynamic-linker /lib/ld-linux.so.2 
+STARTUP = /usr/lib/crt1.o /usr/lib/crti.o /usr/lib/crtn.o 
+
+test: test.o 
+        $(LD) $(LDFLAGS) -o test $(STARTUP) test.o 
+
+test.o: test.c 
+        $(CC) $(CFLAGS) -o test.o test.c 
+```
+
+참고로 make에서는 자주 쓰이는 macro를 따로 제공하고 있다.
+
+- \$(\@) 또는 \$\@: Target
+
+- \$(\<) 또는 \$\<: 제일 처음으로, 즉 제일 왼쪽에 기술된 dependency.
+
+- \$(\^) 또는 \$\^: 모든 dependencies를 의미한다.
+
+- \$(?) 또는 \$?: (Target과 Depend의 생성 날짜를 비교해서) 최근에 변경된 dependencies를 의미한다.
+
+따라서 이를 이용하면 예제를 다음과 같이 Macro만 이용해서도 작성할 수 있다.
+
+```
+CC = cc 
+LD = ld 
+CFLAGS = -O2 -Wall -Werror -fomit-frame-pointer -c 
+LDFLAGS = -lc -m elf_i386 -dynamic-linker /lib/ld-linux.so.2 
+STARTUP = /usr/lib/crt1.o /usr/lib/crti.o /usr/lib/crtn.o 
+
+test: test.o 
+        $(LD) $(LDFLAGS) -o $@ $(STARTUP) $^ 
+
+.c.o: 
+        $(CC) $(CFLAGS) -o $@ $< 
+```
+
+---
+
+#### 5.11.1.5 Make: Clean
+
+새 <Target>으로 가짜 <Target>인 'clean'을 만들고 'make clean'을 입력하는 것으로, 생성 날짜와 관계 없이 언제나 빌드(compile 및 link 과정)를 다시 수행할 수 있다.
+
+```
+CC = cc 
+LD = ld 
+RM = rm -f 
+CFLAGS = -O2 -Wall -Werror -fomit-frame-pointer -c 
+LDFLAGS = -lc -m elf_i386 -dynamic-linker /lib/ld-linux.so.2 
+STARTUP = /usr/lib/crt1.o /usr/lib/crti.o /usr/lib/crtn.o 
+
+clean: 
+        $(RM) test.o test 
+
+test: test.o 
+        $(LD) $(LDFLAGS) -o $@ $(STARTUP) $^ 
+
+.c.o: 
+        $(CC) $(CFLAGS) -o $@ $< 
+```
+
+이 가짜 <Target>인 clean은 dependencies가 없다. 따라서 'make clean'을 입력하고 'make test' 명령을 입력하면 언제나 다시 빌드를 수행하게 된다. 참고로 이러한 가짜 <Target>를 명시해 주기 위해 다음과 같이 code를 덧붙인다.
+
+```
+CC = cc 
+LD = ld 
+RM = rm -f 
+CFLAGS = -O2 -Wall -Werror -fomit-frame-pointer -c 
+LDFLAGS = -lc -m elf_i386 -dynamic-linker /lib/ld-linux.so.2 
+STARTUP = /usr/lib/crt1.o /usr/lib/crti.o /usr/lib/crtn.o 
+
+.PHONY: all clean 
+
+all: test 
+
+clean: 
+        $(RM) test.o test 
+
+test: test.o 
+        $(LD) $(LDFLAGS) -o $@ $(STARTUP) $^ 
+
+.c.o: 
+        $(CC) $(CFLAGS) -o $@ $< 
+```
+
+- .PHONY <Target>: 가짜 <Target>들을 dependencies처럼 명시한다. 
+
+- all <Target>: 최종적으로 빌드하고 싶은 목표를 dependencies처럼 명시한다.
+
+이렇게 작성할 경우 'make all'을 입력해서도 test를 빌드할 수 있다. 게다가 all이 제일 앞쪽에 위치할 경우 단순히 'make'로만 명령을 입력해도 all에 입력한 파일들의 빌드를 수행할 수 있다.

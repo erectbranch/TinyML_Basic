@@ -58,6 +58,19 @@ application root는 'tensorflow/lite/micro/examples/hello_world'에 있으며 �
 
 ### 5.3.1 main_functions.cc
 
+살펴보기 앞서 tensorflow/lite/schema/schema_generated.h에서 assertion으로 지정(static_assert)한 버전과 호환이 되어야 한다. 그렇지 않으면 include 과정에서 error가 발생한다. 다음은 'schema_generated.h'에서 해당 assertion을 나타내는 부분이다.
+
+```cpp
+static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
+              FLATBUFFERS_VERSION_MINOR == 0 &&
+              FLATBUFFERS_VERSION_REVISION == 6,
+             "Non-compatible flatbuffers version included");
+```
+
+> [FlatBuffers 가이드](https://google.github.io/flatbuffers/flatbuffers_guide_use_cpp.html), [C++ FlatBuffers github 다운로드](https://github.com/google/flatbuffers/releases) 문서를 참조하자.
+
+> 예제 실습 중 C++ 버전 FlatBuffers(2.0.7)를 tensorflow/의 부모 디렉터리에 따로 설치하였다. 또한 assertion 부분을 2.0.7 버전으로 수정하였다.
+
 include 부분은 앞서 파일 목록에서 설명했다.
 
 ```cpp
@@ -153,7 +166,7 @@ void setup() {
 
 ML logic은 이것으로 마무리되었다. 다시 말해 inference를 실행하고 output을 얻기까지 필요한 도구는 모두 준비된 것이다. 이제 다음으로 필요한 것은 application logic이다.
 
-앞서 model은 sine wave 전체 주기( $0 ~ 2\pi$ )에서 x값의 모든 sine 값을 예측하도록 train됐다. 이 범위 내 숫자를 입력하여 inference output을 출력하고, 과정을 여러 번 실행한다면 model이 전체 범위에서 작동한다는 것을 증명할 수 있다. 
+앞서 model은 sine wave 전체 주기( $0$ ~ $2\pi$ )에서 x값의 모든 sine 값을 예측하도록 train됐다. 이 범위 내 숫자를 입력하여 inference output을 출력하고, 과정을 여러 번 실행한다면 model이 전체 범위에서 작동한다는 것을 증명할 수 있다. 
 
 이러한 증명을 `loop()` function 안에서 무한히 반복해서 실행하는 code로 작성할 수 있다.
 
@@ -161,7 +174,7 @@ ML logic은 이것으로 마무리되었다. 다시 말해 inference를 실행�
 
   - `kXrange`: input(x)의 최대값( $2\pi$ ) 나타낸다.
 
-  - `kInferencesPerCycle`: $0 ~ 2\pi$ 까지 단계적으로 수행하도록 정의한 inference의 총 횟수를 나타낸다.(현재의 'inference_count'와 비교해서 x를 정의할 것이다.)
+  - `kInferencesPerCycle`: $0$ ~ $2\pi$ 까지 단계적으로 수행하도록 정의한 inference의 총 횟수를 나타낸다.(현재의 'inference_count'와 비교해서 x를 정의할 것이다.)
 
   > C++에서는 상수 앞에 k를 붙이는 경우가 많다. 따라서 k를 보고 상수임을 쉽게 식별할 수 있다.
 
@@ -182,6 +195,8 @@ void loop() {
 > `static_cast<float>()`은 해당 값을 floating point type으로 변환하기 위해 사용한 것이다. C++에서 두 int type에 나누기 계산을 하면 결과도 정수를 반환하기 때문에, 올바른 계산을 위해서는 이와 같이 casting이 필요하다.
 
 이렇게 구한 x_val를 model로 전달한다. model의 input tensor에 입력해 주자.
+
+> 참고로 최신 버전의 TFLite의 동일한 예제에서는 int8 quantization을 적용한 x_val, y_val값을 이용한다.
 
 ```cpp
 // loop() 내부
@@ -282,24 +297,27 @@ code를 보면 `setup()`은 호출되어 한 번만 수행되고, while infinite
 make -f tensorflow/lite/micro/tools/make/Makefile hello_world
 ```
 
-빌드가 완료되면 OS에 따라 다음 명령을 사용하여 binary를 실행할 수 있다.
+> 빌드 중에 발생하는 오류를 방지하고자 tensorflow/lite/micro/tools/make/Makefile 내부 몇 가지를 삭제했다.
+
+```
+# Load generated micro mutable op resolver test.
+include ${MICRO_LITE_GEN_MUTABLE_OP_RESOLVER_TEST}
+```
+
+빌드가 완료되면 OS에 따라 다음 명령을 사용하여 binary를 실행할 수 있다. tensorflow/의 부모 디렉터리에서 다음 명령을 실행한다.
+
+> 이와 다르게 구버전을 사용하는 책에서는 tensorflow/lite/micro/tools/make/gen/osx_x86_64/bin/hello_world 경로로 생성되었다.
+
+> 경로의 osx_x86_64는 사용하는 OS마다 다르다.
 
 ```bash
 # MAC OS
-tensorflow/lite/micro/tools/make/gen/osx_x86_64/bin/hello_world
-
-# linux
-tensorflow/lite/micro/tools/make/gen/linux_x86_64/bin/hello_world
-
-# Window
-tensorflow/lite/micro/tools/make/gen/windows_x86_64/bin/hello_world
+./gen/osx_arm64_default/bin/hello_world
 ```
-
-> 올바른 경로를 찾을 수 없다면 'tensorflow/lite/micro/tools/make/gen/' 디렉터리를 살펴보자.
 
 binary를 실행하면 다음과 같은 출력이 쏟아진다. 이 출력들이 바로 'output_handler.cc'의 `HandleOutput()` function으로 작성된 log이다.
 
-![hello_world binary output](images/hello_world_binary_output.png)
+![hello_world binary output](images/hello_world_output.png)
 
 > 확인이 끝났다면 현재 로컬에서는 [Ctrl] + [C]로 program을 종료하자.
 

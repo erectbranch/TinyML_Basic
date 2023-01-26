@@ -40,6 +40,8 @@
 
    > test 실행 환경 구축, test 실행하기
 
+   > Make를 이용한 빌드 기초
+
  - [TFLite model test 파일 구조](https://github.com/erectbranch/TinyML_Basic/tree/master/ch05/summary02)
 
    > main_functions.cc(inference_count, setup(), loop()), output_handler.cc(HandlerOutput()), main.cc(main()), test 빌드와 실행

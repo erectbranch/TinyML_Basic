@@ -1,5 +1,8 @@
+.vscode/
 .DS_Store
 appendix/
 *.log
 **/.ipynb_checkpoints
 **/*checkpoints/
+tensorflow/
+tflite-micro/
