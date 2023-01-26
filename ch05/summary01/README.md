@@ -1,5 +1,7 @@
 # 5 TinyML "Hello World" 애플리케이션 구축
 
+> [Tensorflow github "Hello World" example README](https://github.com/tensorflow/tflite-micro/tree/main/tensorflow/lite/micro/examples/hello_world)
+
 5장에서는 sine model을 활용하여 작은 라이트 쇼를 만드는 embedded application을 구축할 것이다. x값을 모델에 공급, inference, 결과를 사용하여 LED를 점멸하고 장치에 LCD 디스플레이가 있는 경우, 애니메이션을 제어하는 연속 루프를 설정한다.
 
 다음은 기본적인 TinyML application architecture를 나타낸 그림이다.
