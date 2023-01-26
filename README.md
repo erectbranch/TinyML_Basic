@@ -22,6 +22,30 @@
 
 <br/>
 
+## 🚩 정리한 문서 목록
+
+### 🔨 TinyML model 구축하기(sine wave predictor)
+
+ - [sine wave predictor model 구축하기](https://github.com/erectbranch/TinyML_Basic/blob/master/ch04/sine.ipynb)
+
+   > model 구축: dependencies 가져오기/numpy를 사용한 난수 생성/data split(train, validation, test)/model 정의하기/model training/결과 시각화/fine tuning 
+
+   > model 변환(TFLite): TFLiteConverter, TFLiteConverter.optimizations(quantization), TFLite 변환 model을 이용한 inference 수행(tf.lite.Interpreter)
+
+   > model 변환(C source file): xxd를 사용한 byte array 변환
+
+ - [TFLite model test 작성하기](https://github.com/erectbranch/TinyML_Basic/tree/master/ch05/summary01)
+
+   > test 구축: dependencies 가져오기/test 설정(TF_LITE_MICRO_TEST MACRO)/logging 준비(MicroErrorReporter)/model mapping(GetModel(), TFLITE_SCHEMA_VERSION을 이용한 호환성 검사)/AllOpsResolver 생성/tensor arena 정의/Interpreter 생성(MicroInterpreter, AllocateTensors())/input tensor test(TfLiteTensor, assertion)/inference/output 확인(TfLiteTensor)
+
+   > test 실행 환경 구축, test 실행하기
+
+ - [TFLite model test 파일 구조](https://github.com/erectbranch/TinyML_Basic/tree/master/ch05/summary02)
+
+   > main_functions.cc(inference_count, setup(), loop()), output_handler.cc(HandlerOutput()), main.cc(main()), test 빌드와 실행
+
+<br/>
+
 ## :mag: 목차
 
 ### CHAPTER 1 서론
