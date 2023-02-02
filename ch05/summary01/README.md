@@ -429,6 +429,8 @@ Make는 software 빌드 작업을 자동화하는 도구로, 개발자가 정의
 $ make -f tensorflow/lite/micro/tools/make/Makefile test_hello_world_test
 ```
 
+> [MAC make version 오류 해결법](https://stackoverflow.com/questions/43175529/updating-make-version-on-mac): ~/.bash_profile에 PATH="/opt/homebrew/opt/make/libexec/gnubin:$PATH" 추가, 프로젝트 디렉터리에서 source ~/.bash_profile
+
 - TFLite에서는 빌드하려는 대상(hello_world_test)에 test_ 접두어를 붙여서 제공하고 있다.
 
 > test file인 'hello_world_test.cc' 파일은 'tensorflow/lite/micro/examples/hello_world/hello_world_test.cc'에 위치해 있다.
