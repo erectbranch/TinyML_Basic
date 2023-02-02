@@ -12,7 +12,7 @@
 
 ## 5.1 테스트 작성
 
-application code 전에 test를 작성하는 편이 좋다, test는 특정 논리를 보여주는 짧은 code 조각으로, 이를 이용해 예상대로 작동하는지 확인하면서 검증해 나가면 편리하다.
+application code 전에 test를 작성하는 편이 좋다, test는 특정 논리를 보여주는 짧은 code 조각으로, 이를 이용해 예상대로 작동하는지 확인하면서 검증해 나가면 편리하다. hello_world 예제의 test는 'hello_world_test.cc' file에 정의되어 있다.
 
 ---
 
@@ -25,6 +25,8 @@ application code 전에 test를 작성하는 편이 좋다, test는 특정 논�
 > source file(.cc)은 계산과 작업을 수행하는 실제 논리를 구현한다. 예를 들어 micro_interpreter.h의 논리 부분은 micro_interpreter.cc에 포함되어 있다.
 
 ```cpp
+// hello_world_test.cc
+
 #include "tensorflow/lite/micro/examples/hello_world/sine_model_data.h"
 #include "tensorflow/lite/micro/kernels/all_ops_resolver.h"
 #include "tensorflow/lite/micro/micro_error_reporter.h"
@@ -60,7 +62,7 @@ application code 전에 test를 작성하는 편이 좋다, test는 특정 논�
 
 ### 5.1.2 test 설정
 
-다음은 test framework에서 사용되는 부분이다.
+hello_world_test.cc을 더 살펴보자. 다음은 test framework에서 사용되는 부분이다.
 
 ```cpp
 TF_LITE_MICRO_TESTS_BEGIN
@@ -417,7 +419,7 @@ $ git clone https://github.com/tensorflow/tflite-micro.git
 
 Make는 software 빌드 작업을 자동화하는 도구로, 개발자가 정의한 `Makefile`을 바탕으로 code를 빌드하고 실행한다.
 
-> MCU용 TFLite의 `Makefile`은 'lite/micro/tools/make/Makefile'에 정의되어 있다.
+> TFLM의 `Makefile`은 'lite/micro/tools/make/Makefile'에 정의되어 있다.
 
 이제 Make를 사용하여 test를 실행한다. 이때 다음 명령은 git clone으로 생성된 tensorflow/의 부모 디렉터리에서 실행해야 한다.
 
@@ -430,6 +432,8 @@ $ make -f tensorflow/lite/micro/tools/make/Makefile test_hello_world_test
 - TFLite에서는 빌드하려는 대상(hello_world_test)에 test_ 접두어를 붙여서 제공하고 있다.
 
 > test file인 'hello_world_test.cc' 파일은 'tensorflow/lite/micro/examples/hello_world/hello_world_test.cc'에 위치해 있다.
+
+> application binary는 tensorflow/의 부모 디렉터리에서 ./gen/{linux_x86_64}/bin/에 위치한다.
 
 ![test 결과](images/test_hello_world_test_1.png)
 
