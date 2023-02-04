@@ -425,6 +425,8 @@ Make는 software 빌드 작업을 자동화하는 도구로, 개발자가 정의
 
 > make -f tensorflow/lite/micro/tools/make/Makefile 까지 입력하고 [TAB] 키를 누르면 빌드 가능한 모든 대상을 자동 완성으로 확인할 수 있다.
 
+> tensorflow/lite/micro/tools/make/Makefile의 `BUILD_TYPE := default`행을 `BUILD_TYPE := debug`로 바꾸면, -g 옵션을 사용해 디버깅을 위한 symbol을 포함한 binary를 생성한다.(gdb나 lldb 등으로 동적 분석을 하기 유용하다.)
+
 ```bash
 $ make -f tensorflow/lite/micro/tools/make/Makefile test_hello_world_test
 ```
