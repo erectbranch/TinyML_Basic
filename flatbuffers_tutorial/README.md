@@ -58,7 +58,7 @@ table Monster {
 ```cpp
 // Example IDL file 
 
-namespace MyGame.sample;
+namespace MyGame.Sample;
 
 enum Color:byte { Red = 0, Green, Blue = 2 }
 
@@ -147,9 +147,84 @@ compile을 하기 위해서는 FlatBuffers compiler를 설치해야 한다.(flat
 
 > 다양한 언어로 compile 결과물을 만들 수 있으며, 주로 `.fbs` 파일 형식으로 compile하나 `.txt` 같은 형식을 사용해도 무방하다.
 
+flatc compiler를 이용한 compile은 다음과 같이 입력한다.
+
 ```bash
 flatc [ GENERATOR OPTIONS ] [ -o PATH ] [ -I PATH ] [ -S ] FILES...
       [ -- FILES...]
 ```
 
+예시 코드를 compile하기 위해서는 다음과 같이 입력한다.
+
+```bash
+cd flatbuffers/samples
+./../flatc --cpp monster.fbs
+```
+
 ---
+
+## 2.3 Reading and Writing Monster FlatBuffers
+
+위 과정을 거친 FlatBuffers binary를 읽어보자.
+
+우선 'flatc'가 함께 만든 'monster_generated.h'를 include한다. 또한 schema에서 정의한 namespace를 사용하기 위해 'using namespace'를 작성한다.
+
+```cpp
+#include "monster_generated.h"
+
+using namespace MyGame::Sample;
+```
+
+그 다음 `FlatBufferBuilder` 인스턴스를 만들어야 한다. 아래 코드에서 초깃값으로 1024 bytes를 전달하지만, 필요에 따라 자동적으로 늘어나게 된다. `FlatBufferBuilder` 인스턴스 builder를 이용해서 data를 serializing할 수 있다.
+
+```cpp
+flatbuffers::FlatBufferBuilder builder(1024);
+```
+
+serialize하기 앞서서 'Weapon' table에 해당되는 'Sword'와 'Axe'를 만들어 보자.
+
+```cpp
+// 앞서 튜토리얼 예제에서 작성한 Weapon table
+// table Weapon {
+//     name:string;
+//    damage:short;
+// }
+
+auto weapon_one_name = builder.CreateString("Sword");
+short weapon_one_damage = 3;
+
+auto weapon_two_name = builder.CreateString("Axe");
+short weapon_two_damage = 5;
+
+// CreateWeapon 함수를 이용해서 Weapon table을 만들 수 있다.
+// 이처럼 FlatBuffers는 table을 만들 수 있도록 shortcut을 제공한다.
+auto sword = CreateWeapon(builder, weapon_one_name, weapon_one_damage);
+auto axe = CreateWeapon(builder, weapon_two_name, weapon_two_damage);
+```
+
+이번에는 Monster Table의 'orc'를 만들어 보자.
+
+```cpp
+// "Orc"라는 Monster 이름을 serialize 
+auto name = builder.CreateString("Orc");
+
+// Orc의 인벤토리(획득 가능한 재화 목록)를 나타내는 'vector'를 만든다.
+// 각 숫자는 Orc를 사냥하면 얻을 수 있는 item에 대응된다.
+unsigned char treasure[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+auto inventory = builder.CreateVector(treasure, 10);
+```
+
+이 과정으로 built-in data type인 `string`과 `vector`를 serialize하고 return value를 capture할 수 있다. 이 value는 serialized data의 offset을 나타내며, 이를 이용하면 Monster에 필드를 추가할 때 참조하는 위치를 알 수 있다.
+
+예를 들어 바로 전에 만든 'Weapon' table의 'Sword'와 'Axe'를 생각해 보자. 둘 다 FlatBuffers table로 memory에 offset들이 저장된다. 그러므로 이제 그들의 offset을 포함하는 FlatBuffers vector를 만들 수 있다.
+
+```cpp
+// weapon을 `std::vector`에 위치시킨다. 그리고 이들을 FlatBuffer `vector`로 변환한다.
+std::vector<flatbuffers::Offset<Weapon>> weapons_vector;
+weapons_vector.push_back(sword);
+weapons_vector.push_back(axe);
+auto weapons = builder.CreateVector(weapons_vector);
+```
+
+---
+
