@@ -57,6 +57,7 @@ table Monster {
 
 ```cpp
 // Example IDL file 
+// 파일명: monster.fbs
 
 namespace MyGame.Sample;
 
@@ -143,9 +144,13 @@ Struct는 Table과 비슷하나 default 값이 없다. 또한 필드를 추가�
 
 ## 2.2 Compiling
 
+> [FlatBuffers Github Release](https://github.com/google/flatbuffers/releases): flatc와 Source code 다운로드
+
+> mac에서 homebrew를 이용해 brew install flatbuffers로 설치할 수도 있다.
+
 compile을 하기 위해서는 FlatBuffers compiler를 설치해야 한다.(flatc) 주의할 점은 이후 dependencies로 넣어주는 library file의 버전을 compile된 결과물의 버전과 일치시켜야 한다.
 
-> 다양한 언어로 compile 결과물을 만들 수 있으며, 주로 `.fbs` 파일 형식으로 compile하나 `.txt` 같은 형식을 사용해도 무방하다.
+> 다양한 언어로 compile 결과물을 만들 수 있으며, 주로 `.fbs` 파일 형식으로 compile 때 넘겨주나 `.txt`로 작성해서 넘겨도 무방하다.
 
 flatc compiler를 이용한 compile은 다음과 같이 입력한다.
 
@@ -154,18 +159,20 @@ flatc [ GENERATOR OPTIONS ] [ -o PATH ] [ -I PATH ] [ -S ] FILES...
       [ -- FILES...]
 ```
 
-예시 코드를 compile하기 위해서는 다음과 같이 입력한다.
+예시 코드를 compile하기 위해서는 다음과 같이 입력한다. 예제 코드는 Source Code 압축을 풀면 flatbuffers/samples/monster.fbs에 위치해 있다.
 
 ```bash
 cd flatbuffers/samples
 ./../flatc --cpp monster.fbs
 ```
 
+그러면 동일 디렉터리에 'monster_generated.h' 파일이 생기게 된다.
+
 ---
 
-## 2.3 Reading and Writing Monster FlatBuffers
+## 2.3 Creating and Writing Monster FlatBuffers
 
-위 과정을 거친 FlatBuffers binary를 읽어보자.
+이제 FlatBuffers binary를 만들어 보자.
 
 우선 'flatc'가 함께 만든 'monster_generated.h'를 include한다. 또한 schema에서 정의한 namespace를 사용하기 위해 'using namespace'를 작성한다.
 
